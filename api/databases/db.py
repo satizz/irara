@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
 # Create engine and connect to the PostgreSQL database
-engine = create_engine('postgres://avnadmin:************************@traffic-irara.e.aivencloud.com:12679/defaultdb?sslmode=require', echo=True)  # Replace username and password with your PostgreSQL credentials
+engine = create_engine('postgres://avnadmin:AVNS__XMFENAQ3Jjq2nY86ul@traffic-irara.e.aivencloud.com:12679/defaultdb?sslmode=require', echo=True)  # Replace username and password with your PostgreSQL credentials
 
 # Create a base class for declarative class definitions
 Base = declarative_base()
