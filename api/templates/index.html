@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Intelligent Road Accident Report System</title>
+   <link href="{{ url_for('static',filename='/css/style.css') }}" rel="stylesheet"/>
+   
+   <script src="{{ url_for('static',filename='/css/topojson.v1.min.js') }}"></script> 
+   
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js library -->
+</head>
+<body>
+    <div class="container-fluid" >
+      <nav class="navbar navbar-light bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/">IRARS</a>
+          <a class="nav-item nav-link active" aria-current="page" href="/index.html">Dashboard</a>
+          <a class="nav-item nav-link active" aria-current="page" href="/about.html">About Us</a>
+          <a class="nav-item nav-link active" aria-current="page" href="/help.html">Help</a>
+          <a role="button" class="btn btn-primary" href="report"> Report Accident </a>
+         
+
+
+  <form class="d-flex input-group w-auto">
+        <input
+              type="search"
+              class="form-control rounded"
+              placeholder="Search"
+              aria-label="Search"
+              aria-describedby="search-addon"
+            />
+            <span class="input-group-text border-0" id="search-addon">
+              <i class="fas fa-search"></i>
+            </span>
+          </form>
+        </div>
+      </nav>
+            <h3 style="align-items: center;">Intelligent Road Accident Report System</h3>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12"><!DOCTYPE html>
+        
+          <title>Local Boundaries</title>
+          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+          <script src="{{ url_for('static',filename='/css/d3.v3.min.js') }}"> </script>
+   
+          <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+          <style>
+            #map {
+              height: 400px;
+              width: 100%;
+            }
+          </style>
+       
+          <h1>Local Boundaries</h1>
+          <div id="map"></div>
+        
+          <script>
+            var map = L.map('map').setView([28.1999999, 84.100140], 7);
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+                maxZoom: 8, minZoom: 6,
+                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+                id: 'mapbox.light'
+            }).addTo(map);
+        
+            locallevel = L.geoJson(null, {
+                style: function (feature) {
+                    return feature.properties && feature.properties.style;
+                },
+        
+                onEachFeature: handleLayer,
+        
+            }).addTo(map)
+        
+        
+            district = L.geoJson(null, {
+                style: function (feature) {
+                    return {
+                        weight: 2,
+                        color: 'black',
+                        fillColor: 'none'
+                    }
+                },
+            })
+        
+            province = L.geoJson(null, {
+                style: function (feature) {
+                    return {
+                        weight: 2,
+                        color: 'red',
+                        fillColor: 'none'
+                    }
+                },
+        
+            })
+        
+        
+            d3.json("{{ url_for('static',filename='/css/municipality.topojson') }}", function (error, data) {
+                var neighborhoods = topojson.feature(data, data.objects.collection)
+                locallevel.addData(neighborhoods);
+            })
+        
+            d3.json("{{ url_for('static',filename='/css/district.topojson') }}", function (error, data) {
+                var neighborhoods = topojson.feature(data, data.objects.collection)
+                district.addData(neighborhoods);
+            })
+        
+            d3.json("{{ url_for('static',filename='/css/province.topojson') }}" , function (error, data) {
+                var neighborhoods = topojson.feature(data, data.objects.collection)
+                province.addData(neighborhoods);
+            })
+        
+        
+            var districtLayer = {
+                "District": district,
+            };
+        
+            var provinceLayer = {
+                "Province": province,
+            };
+
+            var municipalitylayer = {
+                "Municipality":locallevel,
+            }
+        
+            L.control.layers(districtLayer, provinceLayer,municipalitylayer).addTo(map);
+        
+        
+            function handleLayer(feature, layer) {
+                layer.bindTooltip(
+                    'State Code :' + feature.properties.STATE_CODE + '<br>' +
+                    'Municipality Name : ' + feature.properties.GaPa_NaPa + '<br>' +
+                    'Municipality Level : ' + feature.properties.Type_GN + '<br>' +
+                    'District : ' + feature.properties.DISTRICT + '<br>', { noHide: true })
+        
+                layer.setStyle({
+                    fillColor: '#D5E3FF',
+                    fillOpacity: 1,
+                    color: '#555',
+                    weight: 1,
+                    opacity: 0.5
+                });
+        
+                layer.on({
+                    mouseover: enterLayer,
+                    mouseout: leaveLayer
+                });
+                layer.on('click', function (e) {
+                    alert(layer.feature.properties.GaPa_NaPa)
+                });
+            }
+        
+            function enterLayer() {
+                this.bringToFront();
+                this.setStyle({
+                    weight: 2,
+                    opacity: 1
+                });
+            }
+        
+            function leaveLayer() {
+                this.bringToBack();
+                this.setStyle({
+                    weight: 1,
+                    opacity: .5
+                });
+            }
+        
+            $('.leaflet-control-layers-selector').attr('type', 'checkbox');
+        
+        </script>
+        </div>
+    <div class="col-md-6">
+  <canvas id="chartCanvas"></canvas>
+  </div>
+  <div class="col-md-6"
+  <canvas id="Barchart"></canvas>
+</div>
+</div>
+  <br/>
+  </div>
+
+<div class="container">
+  <br/>
+  <div class="row">
+  <h1 class="align-self-center">Recently Added Reports</h1>
+  </div>
+            <table class="table align-middle mb-0 bg-white">
+                <thead class="bg-light">
+                  <tr>
+                    <th>Basic Information</th>
+                    <th>Description</th>
+                    <th>Severity</th>
+                    <th>Vehicle Information</th>
+                    <th>Remarks</th>
+                    <th>Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for accident in accidents %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img
+                            src="#"
+                            alt=""
+                            style="width: 45px; height: 45px"
+                            class="rounded-circle"
+                            />
+                            
+                        <div class="ms-3">
+                          <p class="fw-bold mb-1">{{accident.location}}</p>
+                          <p class="text-muted mb-0">{{accident.date}}</p>
+                          <p class="text-muted mb-0">{{accident.time}}</p>
+
+                          
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                      <p class="fw-normal mb-1">{{accident.description}}</p><hr>
+                      <div class="ms-3">
+                      <p class="text-muted mb-0">Weather Condition: {{accident.weather_condition}}</p>
+                      <p class="text-muted mb-0">Road Condition: {{accident.road_condition}}</p>
+                      <p class="text-muted mb-0">Cause of Accident: {{accident.cause}}</p>
+                      </div>
+                       </div>      
+                    </td>
+                    <td>
+                      <span class="badge badge-success rounded-pill d-inline">{{accident.Severity}}</span>
+                    </td>
+                    <td>{{accident.num_vehicles_involved}}</td>
+                    <td>{{accident.casualties}}</td>
+                    
+                    <td>
+                      <button type="button" class="btn btn-link btn-sm btn-rounded">
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+    
+    </div>
+    <script>
+        var chartCanvas = document.getElementById('chartCanvas');
+        var chartCtx = chartCanvas.getContext('2d');
+        var labels = [];
+        var data = {};
+    {% for accident in accidents %}
+        var cause = "{{ accident.cause }}";
+        var severity = "{{ accident.severity }}";
+        
+        if (!data[cause]) {
+            data[cause] = {};
+        }
+        
+        if (data[cause][severity]) {
+            data[cause][severity] += 1;
+        } else {
+            data[cause][severity] = 1;
+            labels.push(cause);
+        }
+    {% endfor %}
+    var chartData = [];
+    var severityLabels = Object.keys(data[labels[0]]);
+    
+    for (var i = 0; i < severityLabels.length; i++) {
+        var dataValues = [];
+        
+        for (var j = 0; j < labels.length; j++) {
+            var causeData = data[labels[j]];
+            dataValues.push(causeData[severityLabels[i]] || 0);
+        }
+        
+        chartData.push[{
+            label: severityLabels[i],
+            data: dataValues,
+            backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        };
+        var chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false
+        };
+        var chart = new Chart(chartCtx, {
+            type: 'doughnut',
+            data: chartData,
+            options: chartOptions
+        });
+    </script>
+    </body>
+    <script type="text/javascript" src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static',filename='/js/script.js') }}"></script>    
+    <script src="https://www.unpkg.com/@klltech/baato-js-client@1.1.1/dist/bundle.js"></script>
+  
+</html>

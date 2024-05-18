@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Intelligent Road Accident Report System</title>
+    <link href="{{ url_for('static',filename='/css/style.css') }}" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static',filename='/css/d3.v3.min.js') }}"> </script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="{{ url_for('static',filename='/js/script.js') }}"></script> 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+      
+</head>
+<body>
+    <div class="container-fluid" >
+      <nav class="navbar navbar-light bg-body-tertiary">
+        <div class="container-fluid">
+          <a class="navbar-brand">IRARS</a>
+          <a class="nav-item nav-link active" aria-current="page" href="/home">Dashboard</a>
+          <a class="nav-item nav-link active" aria-current="page" href="/home">About Us</a>
+          <a class="nav-item nav-link active" aria-current="page" href="/home">Help</a>
+          <a role="button" class="btn btn-primary" href="report" > Report Accident </a>
+         
+
+
+  <form class="d-flex input-group w-auto">
+        <input
+              type="search"
+              class="form-control rounded"
+              placeholder="Search"
+              aria-label="Search"
+              aria-describedby="search-addon"
+            />
+            <span class="input-group-text border-0" id="search-addon">
+              <i class="fas fa-search"></i>
+            </span>
+          </form>
+        </div>
+      </nav>
+            <h3 style="align-items: center;">Intelligent Road Accident Report System</h3>
+
+   
+    <div class="container">
+        <div class="row">
+        <div class="col-md-6">
+        <form method="POST" action="/report">
+            <div class="mb-3 col-auto location">
+                <label class="form-label" for="location">Location:</label>
+                <select class="form-control" id="location" name="location" aria-placeholder="Province">
+                    <option value="" disabled selected hidden>Select Province</option>
+                   
+                </select>
+                <select class="form-control mt-2" id="district" name="district" aria-placeholder=" District">
+                    <option value="" disabled selected hidden>Select District</option>
+                   
+                </select>
+                <select class="form-control mt-2" id="gapa_napa" name="gapa_napa" aria-placeholder="Place">
+                    <option value="" disabled selected hidden>Select Area</option>
+                   
+                </select>
+                <script>
+                 function sortByPropertyDescending(property, data) {
+                    return [...data].sort((a, b) => a[property] < b[property] ? 1 : -1);
+                    }
+              
+                  function populateSelect(elementId, data, labelProperty) {
+                    const element = document.getElementById(elementId);
+                    element.innerHTML = '';
+              
+                    const itemValues = new Set(data.map(item => item[labelProperty])); // Extract unique values
+                    for (const value of itemValues) {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.text = value;
+                        element.appendChild(option);
+                        }
+                    
+                  }
+              
+                  function nestOptions(outerElementId, innerElementId, data, labelProperty, groupLabelProperty) {
+                    const outerElement = document.getElementById(outerElementId);
+                    outerElement.innerHTML = '';
+              
+                    const groups = data.reduce((groups, item) => {
+                    const group = groups[item[groupLabelProperty]];
+              
+                      if (!group) {
+                        groups[item[groupLabelProperty]] = [item];
+                      } else {
+                        group.push(item);
+                      }
+              
+                      return groups;
+                    }, {});
+              
+                    const sortedGroups = sortByPropertyDescending(groupLabelProperty, Object.entries(groups));
+              
+                    sortedGroups.forEach(([groupLabel, groupData]) => {
+                      const groupOption = document.createElement('option');
+                      groupOption.value = groupLabel;
+                      groupOption.text = groupLabel;
+                      outerElement.appendChild(groupOption);
+              
+                      const innerElement = document.getElementById(innerElementId);
+                      groupData.forEach((item) => {
+                        const innerOption = document.createElement('option');
+                        innerOption.value = item[labelProperty];
+                        innerOption.text = item[labelProperty];
+                        innerElement.appendChild(innerOption);
+                      });
+                    });
+                  }
+              
+                  fetch('/static/css/location.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        const sortedData = sortByPropertyDescending('Province', data);
+                        populateSelect('location', sortedData, 'Province');
+              
+                        const locationSelect = document.getElementById('location');
+                        locationSelect.addEventListener('change', () => {
+                        
+                        const filteredData = data.filter(item => item.Province === locationSelect.value);
+                        const sortedFilteredData = sortByPropertyDescending('DISTRICT', filteredData);
+                        populateSelect('district', sortedFilteredData, 'DISTRICT');
+              
+                        const districtSelect = document.getElementById('district');
+                        districtSelect.addEventListener('change', () => {
+                          const filteredData = data.filter(item => item.Province === locationSelect.value && item.DISTRICT === districtSelect.value);
+                          const sortedFilteredData = sortByPropertyDescending('GaPa_NaPa', filteredData);
+                          populateSelect('gapa_napa', sortedFilteredData, 'GaPa_NaPa');
+                        });
+                      });
+              
+                      nestOptions('location', 'district', data, 'DISTRICT', 'Province');
+              
+                      locationSelect.dispatchEvent(new Event('change'));
+                    }).catch(error => console.error('Error fetching JSON data:', error));
+                </script>
+              </div>
+            <div class="mb-3">
+                <span id="styled-datepicker">
+                    <label class="form-label" for="date">Date:</label>
+                    <input class="form-control" type="text" id="date" name="date" readonly required/>
+                </span>
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+    flatpickr("#styled-datepicker #date", {
+        altInput: true,
+        allowInput: false,
+        enableTime: false,
+        dateFormat: "Y-m-d",
+    });
+});
+            </script>
+            </div>
+            <div class="mb-3">
+                <span id="styled-timepicker">
+                    <label class="form-label" for="time">Time:</label>
+                    <input class="form-control" type="text" id="time" name="time" readonly required/>
+                </span>
+                <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+    flatpickr("#styled-timepicker #time", {
+        enableTime: true,
+        noCalendar: true,
+        time_24hr: true,
+        altInput: true,
+        altFormat: "H:i K",
+        dateFormat: "H:i",
+    });
+});
+                </script>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="severity">Severity:</label>
+                <select class="form-control" id="severity" name="severity" placeholder=" " required>
+                    <option value="" disabled selected hidden>Select severity level</option>
+                    <option value="minor">Minor</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="severe">Severe</option>
+                  </select>
+                
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description:</label>
+                <textarea class="form-control" id="description" name="description" rows="4" cols="50"></textarea>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                
+                <label class="form-label" for="weather_condition">Weather Condition:</label>
+                <select class="form-control" id="weather_condition" name="weather_condition" placeholder=" " required>
+                    <option value="" disabled selected hidden>Select weather condition</option>
+                    <option value="clear">Clear</option>
+                    <option value="rainy">Rainy</option>
+                    <option value="foggy">Foggy</option>
+                    <option value="snowy">Snowy</option>
+                    <option value="other">Other</option>
+                  </select>
+               </div>
+            <div class="mb-3">
+                <label class="form-label" for="road_condition">Road Condition:</label>
+                <select class="form-control" id="road_condition" name="road_condition" placeholder=" " required>
+                    <option value="" disabled selected hidden>Select road condition</option>
+                    <option value="dry">Dry</option>
+                    <option value="wet">Wet</option>
+                    <option value="icy">Icy</option>
+                    <option value="under_construction">Under construction</option>
+                    <option value="potholes">Potholes</option>
+                    <option value="other">Other</option>
+                  </select>
+            </div>
+
+      
+            <div class="mb-3">
+                <label class="form-label" for="cause">Cause of Accident:</label>
+                <select class="form-control" id="cause" name="cause" placeholder=" " required>
+                    <option value="" disabled selected hidden>Select primary reason</option>
+                    <option value="Driver's negligence">Driver's negligence</option>
+                    <option value="Drink and drive">Drink and drive</option>
+                    <option value="Speed">Speed</option>
+                    <option value="Overtake">Overtake</option>
+                    <option value="Environmental condition">Environmental condition</option>
+                    <option value="Mechanical failure">Mechanical failure</option>
+                    <option value="Road condition">Road condition</option>
+                    <option value="Cattle">Cattle</option>
+                    <option value="Other">Other</option>
+                  </select>
+                
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="num_vehicles_involved"># Vehicles Involved:</label>
+                <input class="form-control" type="number" id="num_vehicles_involved" name="num_vehicles_involved" value="1" min="1" onchange="toggleCasualtySection(this.value)"><br><br>
+            </div>
+        </div>
+        </div>
+        <div class="row">
+        <hr>
+        <div class="col-md-4"><h2 id="casualty_section">People Involved</h2></div>
+        <div class="col-md-4"><button type="button" onclick="addCasualty()">Add Casualty</button></div>
+        <div class="col-md-4"><button type="button" onclick="rmCasualty()">Remove Casualty</button></div>
+        <div class="col-md-12">
+        <div id="casualties">
+           
+            <hr>
+            
+            
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+        
+        <input class="form-control btn btn-primary" type="submit" value="Submit">
+    </form>
+
+    <script>
+
+        function toggleCasualtySection(numVehicles) {
+            var casualtySection = document.getElementById('casualty_section');
+            var casualtiesDiv = document.getElementById('casualties');
+
+            if (numVehicles >= 1) {
+                casualtySection.style.display = "block";
+                casualtiesDiv.style.display = "block";
+            } else {
+                casualtySection.style.display = "none";
+                casualtiesDiv.style.display = "none";
+            }
+        }
+
+        function addCasualty() {
+    let casualtiesDiv = document.getElementById('casualties');
+    
+    // Remove existing casualty fields
+    //let existingCasualties = casualtiesDiv.getElementsByTagName('div');
+    //while (existingCasualties.length > 0) {
+    //    casualtiesDiv.removeChild(existingCasualties[0]);
+    //}
+
+    let newCasualty = document.createElement('div');
+
+    newCasualty.innerHTML = `<div class="row g-4">
+                                <div class="col-auto">
+                                    <label class="form-label" for="casualty_name">Name:</label>
+                                    <input class="form-control" type="text" id="casualty_name" name="casualty_name" required>
+                                </div>
+                                <div class="col-auto">
+                                    <label class="form-label" for="casualty_age">Age:</label>
+                                    <select class="form-control" id="casualty_age" name="casualty_age" placeholder=" " required>
+                                        <option value="" disabled selected hidden>Select age group</option>
+                                        <option value="18-25">18-25</option>
+                                        <option value="26-35">26-35</option>
+                                        <option value="36-45">36-45</option>
+                                        <option value="46-60">46-60</option>
+                                        <option value="60-above">60+</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label class="form-label" for="casualty_gender">Gender:</label>
+                                    <select class="form-control" id="casualty_gender" name="casualty_gender">
+                                        <option value="None">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label class="form-label" for="casualty_status">Health Status:</label>
+                                    <select class="form-control" id="casualty_status" name="casualty_status">
+                                        <option value="None">Health Status</option>
+                                        <option value="injured">Minor Injury</option>
+                                        <option value="hospital">Hospitaized</option>
+                                        <option value="dead">Dead</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <hr>
+                            `;
+
+    casualtiesDiv.appendChild(newCasualty);
+}
+function rmCasualty(){
+    let casualtiesDiv = document.getElementById('casualties');
+    
+    if (casualtiesDiv.childElementCount > 0) {
+      casualtiesDiv.removeChild(casualtiesDiv.lastChild);
+    }
+}
+    </script>
+   
+    </body>
+</html>
